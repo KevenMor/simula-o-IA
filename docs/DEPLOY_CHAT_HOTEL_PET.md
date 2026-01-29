@@ -109,6 +109,7 @@ O `api.ts` foi ajustado: com `VITE_API_URL=""` no build, usamos **mesma origem**
 | Chat abre mas erro ao enviar mensagem | Frontend sem `VITE_API_KEY` no build | Preencher **Build args**: `VITE_API_KEY` = mesmo valor de `API_KEY_N8N` |
 | Build do Docker **falha** no estágio do frontend | `tsc` quebra (main.ts, api.ts) | O `Dockerfile.chat` já usa só `vite build` (sem `tsc`). Faça **rebuild** e confira os logs. |
 | Deploy ok mas frontend não abre | Cache antigo ou static ausente | Ver **`/health`**; fazer **rebuild sem cache**; checar Network (assets 404?). |
+| **Container reinicia / uvicorn crash** | `api_key_n8n` Field required, ou `ModuleNotFoundError: app.models` | (1) **API_KEY_N8N**: defina nas variáveis de ambiente do EasyPanel (ex.: `API_KEY_N8N=suachave`). (2) **app.models**: o módulo foi criado; faça pull e redeploy. |
 
 ---
 

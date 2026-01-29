@@ -51,6 +51,7 @@ Thumbs.db
 # Model cache
 .cache/
 models/
+!app/models/
 *.bin
 *.pt
 *.pth

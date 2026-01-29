@@ -3,6 +3,7 @@
 import os
 from typing import Optional
 from pydantic_settings import BaseSettings
+from pydantic import ValidationError
 
 
 class Settings(BaseSettings):
@@ -46,5 +47,18 @@ class Settings(BaseSettings):
         extra = "ignore"  # Ignore extra fields in .env
 
 
+def _load_settings() -> Settings:
+    try:
+        return Settings()
+    except ValidationError as e:
+        err = str(e)
+        if "api_key_n8n" in err.lower() or "API_KEY_N8N" in err:
+            raise RuntimeError(
+                "Configure API_KEY_N8N nas variáveis de ambiente (EasyPanel). "
+                "Ex.: API_KEY_N8N=sua_chave_secreta"
+            ) from e
+        raise
+
+
 # Global settings instance
-settings = Settings()
+settings = _load_settings()

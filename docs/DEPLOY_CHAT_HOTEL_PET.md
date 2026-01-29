@@ -13,6 +13,53 @@ Acesse **http://localhost:8000/chat-whatsapp** e envie esse link ao cliente.
 
 ---
 
+## Deploy no EasyPanel
+
+Use o **EasyPanel** para subir o projeto e configure as **variáveis de ambiente** direto na interface (não precisa de arquivo `.env`).
+
+### 1. Conectar o repositório
+
+- **Repositório:** `https://github.com/KevenMor/simula-o-IA`
+- **Dockerfile:** `Dockerfile.chat` (caminho: `Dockerfile.chat` na raiz)
+- **Porta:** `8000`
+
+### 2. Variáveis de ambiente (no EasyPanel)
+
+Configure estas variáveis em **Variáveis de ambiente** / **Environment**:
+
+| Variável | Obrigatório | Exemplo / valor |
+|----------|-------------|------------------|
+| `OPENAI_API_KEY` | ✅ Sim | `sk-proj-...` |
+| `API_KEY_N8N` | ✅ Sim | Mesma chave que o frontend usa para `X-API-Key` |
+
+Opcionais (se usar):
+
+| Variável | Uso |
+|----------|-----|
+| `ANTHROPIC_API_KEY` | Claude |
+| `SUPABASE_URL` / `SUPABASE_KEY` | RAG (Supabase) |
+| `POSTGRES_HOST`, `POSTGRES_PORT`, etc. | PostgreSQL |
+
+O `SERVE_CHAT_SPA=1` já está definido no `Dockerfile.chat`; não é preciso repetir.
+
+### 3. Build arguments (se o EasyPanel tiver)
+
+Se existir **Build args** / **Build environment**:
+
+- `VITE_API_URL` = vazio (ou em branco)
+- `VITE_API_KEY` = **mesmo valor** de `API_KEY_N8N`
+
+Assim o frontend é buildado já com a chave. Se o EasyPanel não tiver build args, o deploy sobe, mas o chat pode falhar ao chamar a API (sem chave no frontend). Nesse caso, use deploy por **docker-compose** (VPS) ou informe se o EasyPanel aceita variáveis no build.
+
+### 4. Depois do deploy
+
+- **Chat (cliente):** `https://seu-dominio.easypanel.host/chat-whatsapp` (ou o domínio que você configurou)
+- **API:** `https://seu-dominio/docs` (se precisar)
+
+Envie o link **`/chat-whatsapp`** para o cliente.
+
+---
+
 ## O que sobe
 
 - **Backend** (FastAPI): API `/api/v1/qa/ask`, prompt da Tia Bia, etc.

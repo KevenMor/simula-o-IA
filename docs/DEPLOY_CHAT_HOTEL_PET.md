@@ -17,10 +17,19 @@ Acesse **http://localhost:8000/chat-whatsapp** e envie esse link ao cliente.
 
 Use o **EasyPanel** para subir o projeto e configure as **variáveis de ambiente** direto na interface (não precisa de arquivo `.env`).
 
+### ⚠️ Frontend não abre? Use o `Dockerfile.chat`
+
+O **`Dockerfile`** padrão sobe **só a API** (sem frontend). Para ter a **página do chat** (`/`, `/chat-whatsapp`), o EasyPanel precisa usar o **`Dockerfile.chat`**.
+
+No EasyPanel, em **Build** / **Dockerfile** / **Dockerfile path**, defina:
+- **`Dockerfile.chat`** (e não `Dockerfile`)
+
+O `Dockerfile.chat` faz o build do React, coloca em `/app/static` e o FastAPI sirve a SPA. Sem isso, você só acessa a API (ex.: `/docs`).
+
 ### 1. Conectar o repositório
 
 - **Repositório:** `https://github.com/KevenMor/simula-o-IA`
-- **Dockerfile:** `Dockerfile.chat` (caminho: `Dockerfile.chat` na raiz)
+- **Dockerfile:** `Dockerfile.chat` ← **obrigatório para o frontend**
 - **Porta:** `8000`
 
 ### 2. Variáveis de ambiente (no EasyPanel)
@@ -57,6 +66,15 @@ Assim o frontend é buildado já com a chave. Se o EasyPanel não tiver build ar
 - **API:** `https://seu-dominio/docs` (se precisar)
 
 Envie o link **`/chat-whatsapp`** para o cliente.
+
+### 5. Troubleshooting — frontend não abre
+
+| Sintoma | Causa | Solução |
+|--------|--------|---------|
+| Só aparece JSON ou só `/docs` | Build com `Dockerfile` padrão (só API) | Usar **`Dockerfile.chat`** no EasyPanel |
+| Página em branco ou 404 em `/chat-whatsapp` | SPA não está sendo servida | Conferir se o Dockerfile é `Dockerfile.chat` e se `SERVE_CHAT_SPA=1` (já vem no Dockerfile) |
+| Chat abre mas erro ao enviar mensagem | Frontend sem `VITE_API_KEY` no build | Preencher **Build args**: `VITE_API_KEY` = mesmo valor de `API_KEY_N8N` |
+| Build do Docker **falha** no estágio do frontend | `tsc` quebra (main.ts, api.ts) | O `Dockerfile.chat` já usa só `vite build` (sem `tsc`). Faça **rebuild** e confira os logs. |
 
 ---
 

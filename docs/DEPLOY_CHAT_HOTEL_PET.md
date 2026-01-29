@@ -69,13 +69,36 @@ Envie o link **`/chat-whatsapp`** para o cliente.
 
 ### 5. Troubleshooting — frontend não abre
 
+**Passo a passo para diagnosticar:**
+
+1. **Abra `https://seu-dominio/health`**  
+   Deve retornar algo como:
+   ```json
+   { "serve_spa": true, "static_exists": true, "index_html_exists": true, ... }
+   ```
+   - Se `serve_spa: false` ou `static_exists: false` → o build não usou `Dockerfile.chat` ou o static não foi gerado.
+
+2. **Rebuild sem cache**  
+   O frontend no Docker estava **CACHED**. Pode estar quebrado. No EasyPanel:
+   - Procure **"Clear build cache"**, **"Rebuild"** ou **"No cache"** e faça um novo deploy.
+   - O projeto tem **cache bust** (`FRONTEND_CACHEBUST`) no `Dockerfile.chat`; altere o valor lá e dê push para forçar rebuild.
+
+3. **DevTools (F12) → aba Network**  
+   Abra a URL do app, recarregue e veja:
+   - `GET /` ou `/chat-whatsapp` → 200? Retorna HTML?
+   - `GET /assets/...js` e `...css` → 200 ou 404?  
+   Se os assets forem 404, o proxy (EasyPanel) pode estar servindo o app em **subpath**; aí será preciso configurar `base` no Vite.
+
+4. **URL exata**  
+   O app está em **`https://dominio.com/`** (raiz) ou em **`https://dominio.com/algum-path/`**? Se for subpath, avise para ajustarmos o `base` no frontend.
+
 | Sintoma | Causa | Solução |
 |--------|--------|---------|
 | Só aparece JSON ou só `/docs` | Build com `Dockerfile` padrão (só API) | Usar **`Dockerfile.chat`** no EasyPanel |
 | Página em branco ou 404 em `/chat-whatsapp` | SPA não está sendo servida | Conferir se o Dockerfile é `Dockerfile.chat` e se `SERVE_CHAT_SPA=1` (já vem no Dockerfile) |
 | Chat abre mas erro ao enviar mensagem | Frontend sem `VITE_API_KEY` no build | Preencher **Build args**: `VITE_API_KEY` = mesmo valor de `API_KEY_N8N` |
 | Build do Docker **falha** no estágio do frontend | `tsc` quebra (main.ts, api.ts) | O `Dockerfile.chat` já usa só `vite build` (sem `tsc`). Faça **rebuild** e confira os logs. |
-| Deploy ok mas frontend não abre | Verificar se SPA está ativa | Abra **`/health`**: deve vir `serve_spa: true`, `static_exists: true`, `index_html_exists: true`. Se não, o build usou `Dockerfile` em vez de `Dockerfile.chat` ou o static não foi gerado. |
+| Deploy ok mas frontend não abre | Cache antigo ou static ausente | Ver **`/health`**; fazer **rebuild sem cache**; checar Network (assets 404?). |
 
 ---
 

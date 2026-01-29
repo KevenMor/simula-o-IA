@@ -6,7 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 from contextlib import asynccontextmanager
 import time
 from app.config import settings
@@ -26,6 +26,7 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("Starting AI Agent API...")
         logger.info(f"Environment: {settings.environment}")
+        logger.info(f"SERVE_CHAT_SPA={SERVE_CHAT_SPA}, static_dir={STATIC_DIR}, exists={STATIC_DIR.exists()}")
     except Exception as e:
         logger.error(f"Error during startup: {e}")
     yield
@@ -85,11 +86,17 @@ async def log_requests(request: Request, call_next):
 # Health check endpoint (no auth required)
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint. Inclui diagnose da SPA."""
+    static_exists = STATIC_DIR.exists()
+    index_exists = (STATIC_DIR / "index.html").exists() if static_exists else False
     return {
         "status": "healthy",
         "version": "1.0.0",
-        "environment": settings.environment
+        "environment": settings.environment,
+        "serve_spa": SERVE_CHAT_SPA,
+        "static_dir": str(STATIC_DIR),
+        "static_exists": static_exists,
+        "index_html_exists": index_exists,
     }
 
 
@@ -108,6 +115,11 @@ if SERVE_CHAT_SPA and STATIC_DIR.exists():
     assets_dir = STATIC_DIR / "assets"
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
+    @app.get("/")
+    async def spa_root():
+        """Redireciona raiz para o chat (WhatsApp)."""
+        return RedirectResponse(url="/chat-whatsapp", status_code=302)
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):

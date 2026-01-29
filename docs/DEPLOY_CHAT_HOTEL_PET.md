@@ -75,6 +75,7 @@ Envie o link **`/chat-whatsapp`** para o cliente.
 | Página em branco ou 404 em `/chat-whatsapp` | SPA não está sendo servida | Conferir se o Dockerfile é `Dockerfile.chat` e se `SERVE_CHAT_SPA=1` (já vem no Dockerfile) |
 | Chat abre mas erro ao enviar mensagem | Frontend sem `VITE_API_KEY` no build | Preencher **Build args**: `VITE_API_KEY` = mesmo valor de `API_KEY_N8N` |
 | Build do Docker **falha** no estágio do frontend | `tsc` quebra (main.ts, api.ts) | O `Dockerfile.chat` já usa só `vite build` (sem `tsc`). Faça **rebuild** e confira os logs. |
+| Deploy ok mas frontend não abre | Verificar se SPA está ativa | Abra **`/health`**: deve vir `serve_spa: true`, `static_exists: true`, `index_html_exists: true`. Se não, o build usou `Dockerfile` em vez de `Dockerfile.chat` ou o static não foi gerado. |
 
 ---
 

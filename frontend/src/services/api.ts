@@ -1,7 +1,10 @@
 import axios from 'axios'
 
-// Carregar variáveis de ambiente
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// API URL: em prod (build Docker) usamos '' = mesma origem. Em dev, fallback localhost:8000.
+// VITE_API_URL="" no build → mesmo origem; sem isso em dev → backend em :8000.
+const _raw = import.meta.env.VITE_API_URL
+const API_URL =
+  _raw === '' ? '' : (_raw || (import.meta.env.DEV ? 'http://localhost:8000' : ''))
 let API_KEY = import.meta.env.VITE_API_KEY || ''
 
 // Se não encontrou, tentar carregar manualmente (fallback)
@@ -37,14 +40,11 @@ api.interceptors.request.use(
   (config) => {
     if (API_KEY) {
       config.headers['X-API-Key'] = API_KEY.trim() // Remove espaços em branco
-      console.log('🔑 Enviando API Key:', API_KEY.substring(0, 30) + '...')
-      console.log('📤 Headers da requisição:', {
-        'X-API-Key': config.headers['X-API-Key']?.substring(0, 30) + '...',
-        'Content-Type': config.headers['Content-Type']
-      })
-    } else {
+      if (import.meta.env.DEV) {
+        console.log('🔑 Enviando API Key:', API_KEY.substring(0, 30) + '...')
+      }
+    } else if (import.meta.env.DEV) {
       console.error('❌ API_KEY não configurada! Verifique o arquivo .env')
-      console.error('   VITE_API_KEY no .env:', import.meta.env.VITE_API_KEY)
     }
     return config
   },
@@ -53,20 +53,18 @@ api.interceptors.request.use(
   }
 )
 
-// Interceptor para log de erros
+// Interceptor para log de erros (só em dev para não poluir produção)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        headers: error.config?.headers,
-      }
-    })
+    if (import.meta.env.DEV) {
+      console.error('API Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        config: { url: error.config?.url, method: error.config?.method },
+      })
+    }
     return Promise.reject(error)
   }
 )

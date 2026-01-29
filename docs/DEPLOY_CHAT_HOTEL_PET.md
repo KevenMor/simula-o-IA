@@ -92,6 +92,16 @@ Envie o link **`/chat-whatsapp`** para o cliente.
 4. **URL exata**  
    O app está em **`https://dominio.com/`** (raiz) ou em **`https://dominio.com/algum-path/`**? Se for subpath, avise para ajustarmos o `base` no frontend.
 
+#### Por que abre em dev e não em prod?
+
+| | **Dev** | **Prod** |
+|---|--------|--------|
+| **Frontend** | Vite em `localhost:3000`; proxy `/api` → `:8000` | Build estático servido pelo FastAPI (mesmo container) |
+| **API** | Backend em `:8000`; frontend chama `localhost:8000` ou usa proxy | **Mesma origem**: frontend e API no mesmo domínio. O front deve usar `VITE_API_URL=""` para não apontar para `localhost` (que no navegador do usuário seria a máquina dele, não o servidor). |
+| **O que quebra em prod** | — | (1) **API URL**: se o build usou fallback `localhost:8000`, as chamadas vão para o PC do usuário → falha. (2) **Assets 404**: app em subpath sem `base` no Vite. (3) **Cache**: frontend CACHED no Docker com build antigo. |
+
+O `api.ts` foi ajustado: com `VITE_API_URL=""` no build, usamos **mesma origem** em prod. Em dev, continuamos com `localhost:8000` quando não houver `VITE_API_URL`. Rebuild e redeploy após o fix.
+
 | Sintoma | Causa | Solução |
 |--------|--------|---------|
 | Só aparece JSON ou só `/docs` | Build com `Dockerfile` padrão (só API) | Usar **`Dockerfile.chat`** no EasyPanel |
